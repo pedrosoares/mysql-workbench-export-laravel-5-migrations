@@ -122,9 +122,30 @@ def getColumnsName(insert):
 def getColumnValues(insert):
     result = []
 
-    inserts = insert.replace(")", "").split(', \'')
-    for insert in inserts:
-        result.append( insert.strip().replace("'", "") )
+    regex = r"(\'[^\']*\'|(([^\',]+)))"
+    matches = re.finditer(regex, insert.replace(")", ""))
+
+    for matchNum, match in enumerate(matches):
+        columnValueRegex = match.group().strip()
+
+
+        if len(columnValueRegex) > 0 and columnValueRegex[0] == '\'':
+            columnValueRegex = columnValueRegex.replace(columnValueRegex[:1], '').strip()
+
+        if len(columnValueRegex) > 0 and columnValueRegex[:-1] == '\'':
+            columnValueRegex = columnValueRegex.replace(columnValueRegex[:-1], '').strip()
+
+
+        if len(columnValueRegex) == 0:
+            continue
+
+        result.append( columnValueRegex )
+
+    
+
+    #inserts = insert.replace(")", "").split(', \'')
+    #for insert in inserts:
+        #result.append( insert.strip().replace("'", "") )
 
     return result
     
@@ -179,7 +200,8 @@ class GenerateLaravel5SeederWizard_PreviewPage(WizardPage):
                         'Could not save to file "%s": %s' % (path, str(e)),
                         'OK'
                     )
-     
+    
+
 @ModuleInfo.plugin('wb.util.generateLaravel5Seeder',
                    caption='Export Laravel 5 Seeder',
                    input=[wbinputs.currentCatalog()],
@@ -188,16 +210,7 @@ class GenerateLaravel5SeederWizard_PreviewPage(WizardPage):
 @ModuleInfo.export(grt.INT, grt.classes.db_Catalog)
 def generateLaravel5Seeder(cat):
     
-    global pure_seeds
-
-    for model in grt.root.wb.doc.physicalModels:
-        for schema in model.catalog.schemata:
-            for table in schema.tables:
-                insertToColumn(table) 
-
-
-    wizard = GenerateLaravel5SeederWizard(pure_seeds)
-    wizard.run()
+    Laravel5Seeder()
 
 class GenerateLaravel5SeederWizard(WizardForm):
     def __init__(self, sql_text):
@@ -208,3 +221,15 @@ class GenerateLaravel5SeederWizard(WizardForm):
 
         self.preview_page = GenerateLaravel5SeederWizard_PreviewPage(self, sql_text)
         self.add_page(self.preview_page)
+
+def Laravel5Seeder():
+    global pure_seeds
+
+    for model in grt.root.wb.doc.physicalModels:
+        for schema in model.catalog.schemata:
+            for table in schema.tables:
+                insertToColumn(table) 
+
+
+    wizard = GenerateLaravel5SeederWizard(pure_seeds)
+    wizard.run()

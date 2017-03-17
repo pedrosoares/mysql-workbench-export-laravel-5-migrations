@@ -4,7 +4,7 @@ A MySQL Workbench plugin that allows for exporting a model to Laravel 5 Seeders 
 saved in it's own, properly named, seed file.
 
 ### Version
-0.0.1
+0.0.2
 
 ### Tech
 
